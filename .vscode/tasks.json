@@ -12,6 +12,7 @@
                 "SFUI/UIManager.cpp",
                 "SFUI/Button/Button.cpp",
                 "SFUI/Slider/Slider.cpp",
+                "SFUI/Label/Label.cpp",
 
                 "-IC:/Program Files/Cpp Libraries/SFML-3.0.2/include",
                 "-LC:/Program Files/Cpp Libraries/SFML-3.0.2/lib",

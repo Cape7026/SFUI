@@ -48,6 +48,11 @@ void UIElement::setIcon(sf::Image icon)
     m_icon = icon;
 }
 
+void UIElement::setCharecterSize(float size)
+{
+    m_charecterSize = size;
+}
+
 void UIElement::setLabel(std::string label)
 {
     m_label = label;

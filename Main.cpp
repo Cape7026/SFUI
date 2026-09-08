@@ -60,7 +60,8 @@ int main()
     statusText.setFillColor(sf::Color(200, 200, 200));
     statusText.setPosition({50.f, 420.f});
 
-
+    Label labelA(font, "Label");
+    labelA.setPosition({50.f, 30.f});
 
     Button buttonA;
     buttonA.setSize({150.f, 50.f});
@@ -90,6 +91,7 @@ int main()
     sliderB.setPosition(sf::Vector2f(50.f, 280.f));
     sliderB.setFont(font);
 
+    auto lblA = std::make_shared<Label>(labelA);
     auto btnA = std::make_shared<Button>(buttonA);
     auto btnB = std::make_shared<Button>(buttonB);
     auto btnDisabled = std::make_shared<Button>(buttonC);
@@ -113,6 +115,7 @@ int main()
                             oss << std::fixed << std::setprecision(2) << v;
                             statusText.setString("Slider B: " + oss.str()); });
 
+    ui.add(lblA);
     ui.add(btnA);
     ui.add(btnB);
     ui.add(btnDisabled);
@@ -165,4 +168,3 @@ int main()
 
     return 0;
 }
-

@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <sstream>
 #include <functional>
-
+#include <SFML/Graphics.hpp>
 
 #include "RoundedRectangleShape.hpp"
 #include "Theme.hpp"
@@ -30,10 +30,12 @@ public:
     virtual void setEnabled(bool e);
     virtual void setFont(sf::Font font);
     virtual void setIcon(sf::Image icon);
+    virtual void setCharecterSize(float size);
     void setLabel(std::string label = "");
     void setTheme(Theme theme);
     void setOnClick(ClickCallback cb);
     void setOnChange(ChangeCallbackFloat cb);
+    
 
     sf::Vector2f getPosition() const;
     sf::Vector2f getSize() const;
@@ -59,6 +61,7 @@ protected:
     sf::Font m_font;
     sf::Image m_icon;
     std::string m_label;
+    float m_charecterSize;
 
     Theme m_theme;
 

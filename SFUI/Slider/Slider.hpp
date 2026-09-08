@@ -1,12 +1,6 @@
 #pragma once
 
-
-
-
 #include "../UIElement.hpp"
-
-
-
 
 class Slider : public UIElement
 {
