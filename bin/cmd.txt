@@ -1,0 +1,1 @@
+g++ -std=c++23 main.cpp -I"C:/Program Files/Cpp Libraries/SFML-3.0.2/include" -L"C:/Program Files/Cpp Libraries/SFML-3.0.2/lib" -mwindows -o Game.exe -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio

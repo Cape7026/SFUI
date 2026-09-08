@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Win64",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/Program Files/Cpp Libraries/SFML-3.0.2/include",
+                "C:/Program Files/Cpp Libraries/ThorVG/include"
+            ],
+            "defines": [],
+            "compilerPath": "C:/Program Files/Cpp Compilers/Mingw64/bin/g++.exe",
+            
+            "cStandard": "c11",
+            "cppStandard": "c++23",
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ],
+    "version": 4
+}

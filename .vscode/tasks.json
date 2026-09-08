@@ -1,0 +1,39 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "SFUI",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-std=c++23",
+                "Main.cpp",
+                "SFUI/UIElement.cpp",
+                "SFUI/UIManager.cpp",
+                "SFUI/Button/Button.cpp",
+                "SFUI/Slider/Slider.cpp",
+
+                "-IC:/Program Files/Cpp Libraries/SFML-3.0.2/include",
+                "-LC:/Program Files/Cpp Libraries/SFML-3.0.2/lib",
+                "-LC:/Program Files/Cpp Libraries/ThorVG/lib",
+                "-IC:/Program Files/Cpp Libraries/ThorVG/include",
+
+                "-o",
+                "bin/SFUI.exe",
+
+                "-lsfml-graphics",
+                "-lsfml-window",
+                "-lsfml-system",
+                "-lsfml-audio",
+                "-lthorvg-1"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
+}
