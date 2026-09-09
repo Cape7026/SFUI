@@ -9,6 +9,6 @@ Bugs:
 To Be added:
 - Enable / Disable, Show / hide to buttons
 - Dark theme as seperate theme
-- Disable creation of children with parent class
+- Disable creation of objects with parent class
 - Panes, Scrollables, Tabs
 
