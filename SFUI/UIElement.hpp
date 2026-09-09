@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <sstream>
 #include <functional>
+#include <iostream>
 #include <SFML/Graphics.hpp>
 
 #include "RoundedRectangleShape.hpp"

@@ -19,6 +19,8 @@ struct Theme
     sf::Color sliderTrack = sf::Color(50, 50, 50);
     sf::Color sliderFill = sf::Color(40, 120, 200);
     sf::Color sliderKnob = sf::Color(220, 220, 220);
+    sf::Color sliderFillDiabled = sf::Color(36, 36, 36);
+    sf::Color sliderKnobDisabled = sf::Color(26, 26, 26);
 
     sf::Color outline = sf::Color(50, 50, 50);
     float outlineThick = 1.5f;

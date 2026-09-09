@@ -5,14 +5,15 @@
 class Label : public UIElement
 {
 public:
-    Label(const sf::Font& font, const std::string& text) : m_text(font, text)
+    Label()
     {
+        std::cout << "hello world";
     }
     void handleEvent(const sf::Event &event, const sf::RenderWindow &window) override;
     void handleVisual() override;
     void draw(sf::RenderWindow &window) override;
 
 private:
-    sf::Text m_text;
+    std::optional<sf::Text> m_text;
 };
 

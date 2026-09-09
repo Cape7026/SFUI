@@ -1,0 +1,14 @@
+Fixes and updates:
+- Fixed Labels not rendering bug
+- Added Enable / Disable, Show / hide to Slider and Label
+
+Bugs:
+- Slider height detemines its hitbox but does not cahnge thing visually
+- Inconsistent class APIs
+
+To Be added:
+- Enable / Disable, Show / hide to buttons
+- Dark theme as seperate theme
+- Disable creation of children with parent class
+- Panes, Scrollables, Tabs
+

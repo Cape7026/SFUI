@@ -1,7 +1,5 @@
 #include "Slider.hpp"
 
-
-
 Slider::Slider(float minVal, float maxVal, float initVal)
     : m_min(minVal),
       m_max(maxVal),
@@ -30,7 +28,7 @@ float Slider::getValue() const
 
 void Slider::handleEvent(const sf::Event &event, const sf::RenderWindow &window)
 {
-    if (!m_visible || !m_enabled)
+    if (!m_enabled)
         return;
 
     if (const auto *mb = event.getIf<sf::Event::MouseButtonPressed>())
@@ -65,35 +63,49 @@ void Slider::handleEvent(const sf::Event &event, const sf::RenderWindow &window)
 
 void Slider::handleVisual()
 {
-    float midY = trackMidY();
+    if (!m_enabled)
+    {
+        m_track.setFillColor(m_theme.sliderTrack);
+        m_fill.setFillColor(m_theme.sliderFillDiabled);
+        m_knob.setFillColor(m_theme.sliderKnobDisabled);
+        return;
+    }
+    else
+    {
+        float midY = trackMidY();
 
-    m_track.setSize({m_size.x, kTrackH});
-    m_track.setPosition({trackLeft(), midY - kTrackH / 2.f});
-    m_track.setFillColor(m_theme.sliderTrack);
-    m_track.setCornerPointCount(256);
-    m_track.setRadius(100);
+        m_track.setSize({m_size.x, kTrackH});
+        m_track.setPosition({trackLeft(), midY - kTrackH / 2.f});
+        m_track.setFillColor(m_theme.sliderTrack);
+        m_track.setCornerPointCount(256);
+        m_track.setRadius(100);
 
-    m_fill = m_track;
-    m_fill.setFillColor(m_theme.sliderFill);
+        m_fill = m_track;
+        m_fill.setFillColor(m_theme.sliderFill);
 
-    m_knob.setRadius(kKnobR);
-    m_knob.setPointCount(256);
-    m_knob.setFillColor(m_theme.sliderKnob);
-    m_knob.setOrigin({kKnobR, kKnobR});
+        m_knob.setRadius(kKnobR);
+        m_knob.setPointCount(256);
+        m_knob.setFillColor(m_theme.sliderKnob);
+        m_knob.setOrigin({kKnobR, kKnobR});
 
-    updateKnob();
-    updateLabel();
+        updateKnob();
+        updateLabel();
+    }
 }
 
 void Slider::draw(sf::RenderWindow &window)
 {
-    if (!m_enabled)
+    if (!m_visible)
+    {
         return;
-
-    window.draw(m_track);
-    window.draw(m_fill);
-    window.draw(m_knob);
-    window.draw(*m_valueLabel);
+    }
+    else
+    {
+        window.draw(m_track);
+        window.draw(m_fill);
+        window.draw(m_knob);
+        window.draw(*m_valueLabel);
+    }
 }
 
 float Slider::trackLeft() const

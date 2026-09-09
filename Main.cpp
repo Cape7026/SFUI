@@ -60,8 +60,10 @@ int main()
     statusText.setFillColor(sf::Color(200, 200, 200));
     statusText.setPosition({50.f, 420.f});
 
-    Label labelA(font, "Label");
-    labelA.setPosition({50.f, 30.f});
+    Label labelA;
+    labelA.setFont(font);
+    labelA.setLabel("This is a label");
+    labelA.setPosition({510.f, 310.f});
 
     Button buttonA;
     buttonA.setSize({150.f, 50.f});
@@ -73,16 +75,16 @@ int main()
     buttonB.setSize({150.f, 50.f});
     buttonB.setPosition({220.f, 48.f});
     buttonB.setFont(font);
-    buttonB.setLabel("Toggle Slider");
+    buttonB.setLabel("Enable / Disable");
 
     Button buttonC;
     buttonC.setSize({150.f, 50.f});
     buttonC.setPosition({390.f, 48.f});
     buttonC.setFont(font);
-    buttonC.setLabel("Disabled");
+    buttonC.setLabel("Hide / Show");
 
     Slider sliderA(0.f, 100.f, 50.f);
-    sliderA.setSize(sf::Vector2f(500.f, 10.f));
+    sliderA.setSize(sf::Vector2f(500.f, 60.f));
     sliderA.setPosition(sf::Vector2f(50.f, 180.f));
     sliderA.setFont(font);
 
@@ -94,8 +96,8 @@ int main()
     auto lblA = std::make_shared<Label>(labelA);
     auto btnA = std::make_shared<Button>(buttonA);
     auto btnB = std::make_shared<Button>(buttonB);
-    auto btnDisabled = std::make_shared<Button>(buttonC);
-    btnDisabled->setEnabled(false);
+    auto btnC = std::make_shared<Button>(buttonC);
+    // btnDisabled->setEnabled(false);
 
     auto sldrA = std::make_shared<Slider>(sliderA);
     auto sldrB = std::make_shared<Slider>(sliderB);
@@ -104,7 +106,11 @@ int main()
                      { statusText.setString("Btn A clicked"); });
 
     btnB->setOnClick([&]()
-                     { sldrA->setVisible(!sldrA->isEnabled()); });
+                     {sldrA->setEnabled(!sldrA->isEnabled()); lblA->setEnabled(!lblA->isEnabled()); });
+    btnC->setOnClick([&]()
+                     { sldrA->setVisible(!sldrA->isVisible()); lblA->setVisible(!lblA->isVisible()); });
+
+    //
 
     sldrA->setOnChange([&](float v)
                        { statusText.setString("Slider A: " + std::to_string(static_cast<int>(v))); });
@@ -118,7 +124,7 @@ int main()
     ui.add(lblA);
     ui.add(btnA);
     ui.add(btnB);
-    ui.add(btnDisabled);
+    ui.add(btnC);
     ui.add(sldrA);
     ui.add(sldrB);
 
@@ -149,14 +155,9 @@ int main()
                 camera.setCenter({window.getSize().x / 2.f,
                                   window.getSize().y / 2.f});
 
-                letterboxView(
-                    camera,
-                    window.getSize().x,
-                    window.getSize().y);
-
+                letterboxView(camera, window.getSize().x, window.getSize().y);
                 window.setView(camera);
             }
-
             ui.handleEvent(*event, window);
         }
 
