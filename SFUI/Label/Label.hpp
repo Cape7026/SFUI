@@ -15,3 +15,4 @@ public:
 private:
     sf::Text m_text;
 };
+
