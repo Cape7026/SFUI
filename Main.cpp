@@ -60,73 +60,19 @@ int main()
     statusText.setFillColor(sf::Color(200, 200, 200));
     statusText.setPosition({50.f, 420.f});
 
-    Label labelA;
-    labelA.setFont(font);
-    labelA.setLabel("This is a label");
-    labelA.setPosition({510.f, 310.f});
-
     Button buttonA;
-    buttonA.setSize({150.f, 50.f});
+    buttonA.setSize({100.f, 50.f});
     buttonA.setPosition({50.f, 48.f});
     buttonA.setFont(font);
-    buttonA.setLabel("Click Me");
-
-    Button buttonB;
-    buttonB.setSize({150.f, 50.f});
-    buttonB.setPosition({220.f, 48.f});
-    buttonB.setFont(font);
-    buttonB.setLabel("Enable / Disable");
-
-    Button buttonC;
-    buttonC.setSize({150.f, 50.f});
-    buttonC.setPosition({390.f, 48.f});
-    buttonC.setFont(font);
-    buttonC.setLabel("Hide / Show");
-
-    Slider sliderA(0.f, 100.f, 50.f);
-    sliderA.setSize(sf::Vector2f(500.f, 60.f));
-    sliderA.setPosition(sf::Vector2f(50.f, 180.f));
-    sliderA.setFont(font);
-
-    Slider sliderB(-1.f, 1.f, 0.f);
-    sliderB.setSize(sf::Vector2f(300.f, 30.f));
-    sliderB.setPosition(sf::Vector2f(50.f, 280.f));
-    sliderB.setFont(font);
-
-    auto lblA = std::make_shared<Label>(labelA);
+    buttonA.setLabel("Print");
     auto btnA = std::make_shared<Button>(buttonA);
-    auto btnB = std::make_shared<Button>(buttonB);
-    auto btnC = std::make_shared<Button>(buttonC);
-    // btnDisabled->setEnabled(false);
 
-    auto sldrA = std::make_shared<Slider>(sliderA);
-    auto sldrB = std::make_shared<Slider>(sliderB);
+    //btnA->setEnabled(false);
 
     btnA->setOnClick([&]()
                      { statusText.setString("Btn A clicked"); });
 
-    btnB->setOnClick([&]()
-                     {sldrA->setEnabled(!sldrA->isEnabled()); lblA->setEnabled(!lblA->isEnabled()); });
-    btnC->setOnClick([&]()
-                     { sldrA->setVisible(!sldrA->isVisible()); lblA->setVisible(!lblA->isVisible()); });
-
-    //
-
-    sldrA->setOnChange([&](float v)
-                       { statusText.setString("Slider A: " + std::to_string(static_cast<int>(v))); });
-
-    sldrB->setOnChange([&](float v)
-                       {
-                            std::ostringstream oss;
-                            oss << std::fixed << std::setprecision(2) << v;
-                            statusText.setString("Slider B: " + oss.str()); });
-
-    ui.add(lblA);
     ui.add(btnA);
-    ui.add(btnB);
-    ui.add(btnC);
-    ui.add(sldrA);
-    ui.add(sldrB);
 
     bool isFocused = true;
 

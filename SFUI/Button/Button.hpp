@@ -13,7 +13,8 @@ public:
     void draw(sf::RenderWindow &window) override;
 
 private:
-    void centerText();
+    void adjustTextPosition();
+    void adjustTextSize();
 
     sf::RoundedRectangleShape m_shape;
     std::optional<sf::Text> m_text;

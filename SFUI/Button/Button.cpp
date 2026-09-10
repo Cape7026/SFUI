@@ -2,7 +2,7 @@
 
 void Button::handleEvent(const sf::Event &event, const sf::RenderWindow &window)
 {
-    if (!m_visible || !m_enabled)
+    if (!m_enabled)
         return;
 
     if (const auto *mm = event.getIf<sf::Event::MouseMoved>())
@@ -43,6 +43,15 @@ void Button::handleVisual()
     m_shape.setFillColor(m_theme.btnIdle);
     m_shape.setCornerPointCount(256);
 
+    if (!m_enabled)
+        m_shape.setFillColor(m_theme.btnDisabled);
+    else if (m_pressed)
+        m_shape.setFillColor(m_theme.btnActive);
+    else if (m_hovered)
+        m_shape.setFillColor(m_theme.btnHover);
+    else
+        m_shape.setFillColor(m_theme.btnIdle);
+
     float radius = std::min(m_shape.getSize().x, m_shape.getSize().y) * 0.15f;
     m_shape.setRadius(radius);
 
@@ -50,39 +59,34 @@ void Button::handleVisual()
         m_text.emplace(m_font, m_label, m_theme.charSize);
 
     m_text->setFillColor(m_enabled ? m_theme.textNormal : m_theme.textDisabled);
-    centerText();
+    adjustTextPosition();
+    adjustTextSize();
 }
 
 void Button::draw(sf::RenderWindow &window)
 {
     if (!m_visible)
         return;
-
-    sf::Color fill;
-
-    if (!m_enabled)
-        fill = m_theme.btnDisabled;
-    else if (m_pressed)
-        fill = m_theme.btnActive;
-    else if (m_hovered)
-        fill = m_theme.btnHover;
-    else
-        fill = m_theme.btnIdle;
-
-    m_shape.setFillColor(fill);
-
     window.draw(m_shape);
     window.draw(*m_text);
 }
 
-void Button::centerText()
+void Button::adjustTextPosition()
 {
-    m_text->setFillColor(m_enabled ? m_theme.textNormal : m_theme.textDisabled);
-
     sf::FloatRect tb = m_text->getLocalBounds();
-
-    m_text->setOrigin({tb.position.x + tb.size.x / 2.f,
-                       tb.position.y + tb.size.y / 2.f});
-
+    m_text->setOrigin({tb.position.x + tb.size.x / 2.f, tb.position.y + tb.size.y / 2.f});
     m_text->setPosition(m_position + m_size / 2.f);
 }
+
+void Button::adjustTextSize()
+{
+    sf::Vector2f btnSize = m_shape.getSize();
+    unsigned int size = static_cast<unsigned int>(btnSize.y * 0.6f);
+    m_text->setCharacterSize(size);
+    sf::FloatRect bounds = m_text->getLocalBounds();
+    float widthScale = (btnSize.x * 0.6f) / bounds.size.x;
+    float heightScale = (btnSize.y * 0.6f) / bounds.size.y;
+    float scale = std::min(widthScale, heightScale);
+    m_text->setCharacterSize(static_cast<unsigned int>(size * scale));
+}
+
