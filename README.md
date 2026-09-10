@@ -65,6 +65,7 @@ int main()
 ---
 
 <h3>Note: </h3>
+
 - There is no release version of this project becuase this project is still under development, you can clone the repo and use the project but its not stable
 - This project runs on SFML 3.0.2 which is compiled on MingW version of 14.2.0, Read SFML Documentation for further info
 - This project also uses ThorVG. So make sure you read the license of ThorVG library too
