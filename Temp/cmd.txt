@@ -1,3 +1,0 @@
-g++ Main.cpp -std=c++23 "-IC:/Program Files/Cpp Libraries/SFML-3.0.2/include" "-IC:/Program Files/Cpp Libraries/ThorVG/include" "-LC:/Program Files/Cpp Libraries/SFML-3.0.2/lib" "-LC:/Program Files/Cpp Libraries/ThorVG/lib" -o test.exe -lthorvg-1 -lsfml-graphics -lsfml-window -lsfml-system && test.exe
-
-
