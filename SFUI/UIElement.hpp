@@ -29,10 +29,10 @@ public:
     virtual void setRotation(sf::Angle angle);
     virtual void setVisible(bool v);
     virtual void setEnabled(bool e);
-    virtual void setFont(sf::Font font);
+    virtual void setFont(const sf::Font& font);
     virtual void setIcon(sf::Image icon);
     virtual void setCharecterSize(float size);
-    void setLabel(std::string label = "");
+    void setLabel(sf::String label = "");
     void setTheme(Theme theme);
     void setOnClick(ClickCallback cb);
     void setOnChange(ChangeCallbackFloat cb);
@@ -59,9 +59,9 @@ protected:
     sf::Angle m_angle;
     bool m_visible;
     bool m_enabled;
-    sf::Font m_font;
+    const sf::Font* m_font = nullptr;
     sf::Image m_icon;
-    std::string m_label;
+    sf::String m_label;
     float m_charecterSize;
 
     Theme m_theme;

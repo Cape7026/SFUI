@@ -22,6 +22,7 @@
                 "-o",
                 "bin/SFUI.exe",
 
+                "-ldwmapi",
                 "-lsfml-graphics",
                 "-lsfml-window",
                 "-lsfml-system",

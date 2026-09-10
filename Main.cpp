@@ -4,8 +4,11 @@
 #include <vector>
 #include <sstream>
 #include <windows.h>
+#include <dwmapi.h>
 
 #include "SFUI/SFUI.hpp"
+
+#pragma comment(lib, "dwmapi.lib")
 
 void letterboxView(sf::View &view, unsigned int windowWidth, unsigned int windowHeight)
 {
@@ -36,13 +39,28 @@ int main()
     sf::RenderWindow window(sf::VideoMode({800, 600}), "SFUI", sf::State::Windowed, settings);
 
     window.setFramerateLimit(100);
+
+    HWND hwnd = window.getNativeHandle();
+
+    COLORREF titleBarColor = RGB(30, 30, 30);
+
+    DwmSetWindowAttribute(
+        hwnd,
+        DWMWA_CAPTION_COLOR,
+        &titleBarColor,
+        sizeof(titleBarColor)
+    );
     sf::View camera;
     camera.setSize(sf::Vector2f{static_cast<float>(window.getSize().x), static_cast<float>(window.getSize().y)});
     camera.setCenter(sf::Vector2f{static_cast<float>(window.getSize().x) / 2.f, static_cast<float>(window.getSize().y) / 2.f});
 
     sf::Font font;
 
-    if (!font.openFromFile("arial.ttf"))
+    sf::Font iconFont("C:/Windows/Fonts/SegoeIcons.ttf");
+
+    std::cout << iconFont.hasGlyph(U'\uE700') << '\n';
+
+    if (!font.openFromFile("Aptos.ttf"))
     {
         MessageBoxA(
             nullptr,
@@ -52,6 +70,8 @@ int main()
 
         return -1;
     }
+    font.setSmooth(false);
+    iconFont.setSmooth(false);
 
     Theme theme;
     UIManager ui;
@@ -61,11 +81,12 @@ int main()
     statusText.setPosition({50.f, 420.f}); */
 
     Button buttonA;
-    buttonA.setSize({80.f, 40.f});
+    buttonA.setSize({32.f, 32.f}); // 89 32
     buttonA.setPosition({50.f, 48.f});
-    buttonA.setFont(font);
-    buttonA.setLabel("Print");
+    buttonA.setFont(iconFont);
+    buttonA.setLabel(sf::String(U"\uE713"));
     auto btnA = std::make_shared<Button>(buttonA);
+
 
     //btnA->setEnabled(false);
 
@@ -73,6 +94,8 @@ int main()
                      { statusText.setString("Btn A clicked"); }); */
 
     ui.add(btnA);
+
+    
 
     bool isFocused = true;
 

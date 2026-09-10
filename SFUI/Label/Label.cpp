@@ -8,7 +8,7 @@ void Label::handleVisual()
 {
     if (!m_text)
     {
-        m_text.emplace(m_font, m_label, m_theme.charSize);
+        m_text.emplace(*m_font, m_label, m_theme.charSize);
         m_text->setPosition(m_position);
     }
 

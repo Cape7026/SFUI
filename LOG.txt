@@ -1,14 +1,14 @@
 Fixes and updates:
-- Fixed Labels not rendering bug
-- Added Enable / Disable, Show / hide to Slider and Label
-- Enable / Disable, Show / hide to buttons
-- Fixed button text size adjust
+- Implemented Winodows title bar change
+- Added icons feature
+- Changes looks of button
 
 Bugs:
 - Slider height detemines its hitbox but does not cahnge thing visually
 - Inconsistent class APIs
 
 To Be added:
+- Icons as Seperate UI elements.
 - Dark theme as seperate theme
 - Disable creation of objects with parent class
 - Panes, Scrollables, Tabs

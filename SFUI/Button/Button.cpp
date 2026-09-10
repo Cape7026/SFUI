@@ -42,11 +42,13 @@ void Button::handleVisual()
     m_shape.setSize(m_size);
     m_shape.setFillColor(m_theme.btnIdle);
     m_shape.setCornerPointCount(256);
+    m_shape.setOutlineColor(sf::Color(53, 53, 53));
+    m_shape.setOutlineThickness(1.f);
 
     if (!m_enabled)
         m_shape.setFillColor(m_theme.btnDisabled);
     else if (m_pressed)
-        m_shape.setFillColor(m_theme.btnActive);
+        m_shape.setFillColor(m_theme.btnClicked);
     else if (m_hovered)
         m_shape.setFillColor(m_theme.btnHover);
     else
@@ -56,9 +58,11 @@ void Button::handleVisual()
     m_shape.setRadius(radius);
 
     if (!m_text)
-        m_text.emplace(m_font, m_label, m_theme.charSize);
+        m_text.emplace(*m_font, m_label, m_theme.charSize);
 
     m_text->setFillColor(m_enabled ? m_theme.textNormal : m_theme.textDisabled);
+
+    //m_text->setStyle(sf::Text::Bold);
     adjustTextPosition();
     adjustTextSize();
 }
@@ -78,15 +82,20 @@ void Button::adjustTextPosition()
     m_text->setPosition(m_position + m_size / 2.f);
 }
 
-void Button::adjustTextSize()
+/* void Button::adjustTextSize()
 {
     sf::Vector2f btnSize = m_shape.getSize();
-    unsigned int size = static_cast<unsigned int>(btnSize.y * 0.6f);
+    unsigned int size = static_cast<unsigned int>(btnSize.y * 0.8f);
     m_text->setCharacterSize(size);
     sf::FloatRect bounds = m_text->getLocalBounds();
-    float widthScale = (btnSize.x * 0.6f) / bounds.size.x;
-    float heightScale = (btnSize.y * 0.6f) / bounds.size.y;
+    float widthScale = (btnSize.x * 0.8f) / bounds.size.x;
+    float heightScale = (btnSize.y * 0.8f) / bounds.size.y;
     float scale = std::min(widthScale, heightScale);
     m_text->setCharacterSize(static_cast<unsigned int>(size * scale));
 }
+ */
 
+ void Button::adjustTextSize()
+{
+    m_text->setCharacterSize(24);
+}

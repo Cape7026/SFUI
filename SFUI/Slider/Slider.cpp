@@ -5,7 +5,7 @@ Slider::Slider(float minVal, float maxVal, float initVal)
       m_max(maxVal),
       m_value(std::clamp(initVal, minVal, maxVal)),
       m_dragging(false),
-      m_valueLabel(std::in_place, m_font, std::string(""), m_theme.charSize - 2u)
+      m_valueLabel(std::in_place, *m_font, std::string(""), m_theme.charSize - 2u)
 {
     buildShapes();
     updateLabel();

@@ -38,9 +38,9 @@ void UIElement::setEnabled(bool e)
     m_enabled = e;
 }
 
-void UIElement::setFont(sf::Font font)
+void UIElement::setFont(const sf::Font& font)
 {
-    m_font = font;
+    m_font = &font;
 }
 
 void UIElement::setIcon(sf::Image icon)
@@ -53,7 +53,7 @@ void UIElement::setCharecterSize(float size)
     m_charecterSize = size;
 }
 
-void UIElement::setLabel(std::string label)
+void UIElement::setLabel(sf::String label)
 {
     m_label = label;
 }
