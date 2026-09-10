@@ -61,7 +61,7 @@ int main()
     statusText.setPosition({50.f, 420.f}); */
 
     Button buttonA;
-    buttonA.setSize({100.f, 50.f});
+    buttonA.setSize({80.f, 40.f});
     buttonA.setPosition({50.f, 48.f});
     buttonA.setFont(font);
     buttonA.setLabel("Print");
