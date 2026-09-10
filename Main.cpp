@@ -56,9 +56,9 @@ int main()
     Theme theme;
     UIManager ui;
 
-    sf::Text statusText(font, "Waiting...", 18u);
+    /* sf::Text statusText(font, "Waiting...", 18u);
     statusText.setFillColor(sf::Color(200, 200, 200));
-    statusText.setPosition({50.f, 420.f});
+    statusText.setPosition({50.f, 420.f}); */
 
     Button buttonA;
     buttonA.setSize({100.f, 50.f});
@@ -69,8 +69,8 @@ int main()
 
     //btnA->setEnabled(false);
 
-    btnA->setOnClick([&]()
-                     { statusText.setString("Btn A clicked"); });
+   /*  btnA->setOnClick([&]()
+                     { statusText.setString("Btn A clicked"); }); */
 
     ui.add(btnA);
 
@@ -109,7 +109,7 @@ int main()
 
         window.clear(sf::Color(30, 30, 30));
         ui.draw(window);
-        window.draw(statusText);
+        //window.draw(statusText);
         window.display();
     }
 
