@@ -5,7 +5,7 @@
 class Slider : public UIElement
 {
 public:
-    Slider(float minVal, float maxVal, float initVal);
+    Slider(float minVal, float maxVal, float initVal, sf::Font &font);
 
     void setValue(float v);
     float getValue() const;
@@ -33,5 +33,6 @@ private:
     sf::RoundedRectangleShape m_track;
     sf::RoundedRectangleShape m_fill;
     sf::CircleShape m_knob;
+    sf::CircleShape m_innerKnob;
     std::optional<sf::Text> m_valueLabel;
 };

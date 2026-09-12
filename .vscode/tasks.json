@@ -6,6 +6,7 @@
             "type": "shell",
             "command": "g++",
             "args": [
+                "-g",
                 "-std=c++23",
                 "Main.cpp",
                 "SFUI/UIElement.cpp",

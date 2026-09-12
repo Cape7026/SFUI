@@ -73,19 +73,37 @@ int main()
     font.setSmooth(false);
     iconFont.setSmooth(false);
 
-    Theme theme;
+    
     UIManager ui;
 
     /* sf::Text statusText(font, "Waiting...", 18u);
     statusText.setFillColor(sf::Color(200, 200, 200));
     statusText.setPosition({50.f, 420.f}); */
 
+    std::cout << "A\n";
     Button buttonA;
+    std::cout << "B\n";
     buttonA.setSize({32.f, 32.f}); // 89 32
+    std::cout << "C\n";
     buttonA.setPosition({50.f, 48.f});
+    std::cout << "D\n";
     buttonA.setFont(iconFont);
+    std::cout << "E\n";
     buttonA.setLabel(sf::String(U"\uE713"));
+    std::cout << "F\n";
     auto btnA = std::make_shared<Button>(buttonA);
+
+    std::cout << "G\n";
+
+    // bug here
+    Slider sliderA(0.f, 100.f, 10.f, font);
+    std::cout << "H\n";
+    sliderA.setSize({200, 10});
+    std::cout << "I\n";
+    // sliderA.setValue(10.f);
+    std::cout << "J\n";
+    sliderA.setPosition({50.f, 58.f});
+    auto sldA = std::make_shared<Slider>(sliderA);
 
 
     //btnA->setEnabled(false);
@@ -94,6 +112,7 @@ int main()
                      { statusText.setString("Btn A clicked"); }); */
 
     ui.add(btnA);
+    ui.add(sldA);
 
     
 

@@ -5,23 +5,28 @@
 #include <sstream>
 #include <functional>
 #include <iostream>
+#include <windows.h>
+#include <dwmapi.h>
 #include <SFML/Graphics.hpp>
 
 #include "RoundedRectangleShape.hpp"
 #include "Theme.hpp"
 
-#include <optional>
 
+#include <optional>
 
 class UIElement
 {
 public:
+    UIElement(): m_font(nullptr){};
+
+    //Theme darkTheme;
+
     using ClickCallback = std::function<void()>;
     using ChangeCallbackFloat = std::function<void(float)>;
     using changeCallbackInt = std::function<void(int)>;
 
-    UIElement(const Theme &theme = Theme{});
-    virtual ~UIElement();
+    // UIElement(const Theme &theme = Theme{});
 
     virtual void setPosition(sf::Vector2f position);
     virtual void setSize(sf::Vector2f size);
@@ -29,14 +34,14 @@ public:
     virtual void setRotation(sf::Angle angle);
     virtual void setVisible(bool v);
     virtual void setEnabled(bool e);
-    virtual void setFont(const sf::Font& font);
+    virtual void setFont(const sf::Font &font);
     virtual void setIcon(sf::Image icon);
+    // virtual void setIcon(sf::String icon);
     virtual void setCharecterSize(float size);
     void setLabel(sf::String label = "");
     void setTheme(Theme theme);
     void setOnClick(ClickCallback cb);
     void setOnChange(ChangeCallbackFloat cb);
-    
 
     sf::Vector2f getPosition() const;
     sf::Vector2f getSize() const;
@@ -57,14 +62,14 @@ protected:
     sf::Vector2f m_size;
     sf::Vector2f m_scale;
     sf::Angle m_angle;
-    bool m_visible;
-    bool m_enabled;
-    const sf::Font* m_font = nullptr;
+    bool m_visible = true;
+    bool m_enabled = true;
+    const sf::Font *m_font;
     sf::Image m_icon;
     sf::String m_label;
     float m_charecterSize;
 
-    Theme m_theme;
+    Theme m_theme = darkTheme;
 
     ClickCallback m_onClick;
     ChangeCallbackFloat m_onChange;

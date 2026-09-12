@@ -1,12 +1,8 @@
 
 
 #include "UIElement.hpp"
-UIElement::UIElement(const Theme &theme)
-    : m_visible(true), m_enabled(true), m_theme(theme)
-{
-}
 
-UIElement::~UIElement() = default;
+
 
 void UIElement::setPosition(sf::Vector2f position)
 {
@@ -112,3 +108,10 @@ bool UIElement::containsPoint(sf::Vector2f point) const
 {
     return getBounds().contains(point);
 }
+
+
+
+
+
+
+

@@ -1,14 +1,13 @@
 #include "Slider.hpp"
 
-Slider::Slider(float minVal, float maxVal, float initVal)
+Slider::Slider(float minVal, float maxVal, float initVal, sf::Font &font)
     : m_min(minVal),
       m_max(maxVal),
       m_value(std::clamp(initVal, minVal, maxVal)),
       m_dragging(false),
-      m_valueLabel(std::in_place, *m_font, std::string(""), m_theme.charSize - 2u)
+      //m_font(&font),
+      m_valueLabel(std::in_place, font, ".", m_theme.charSize - 2u)
 {
-    buildShapes();
-    updateLabel();
 }
 
 void Slider::setValue(float v)
@@ -66,7 +65,7 @@ void Slider::handleVisual()
     if (!m_enabled)
     {
         m_track.setFillColor(m_theme.sliderTrack);
-        m_fill.setFillColor(m_theme.sliderFillDiabled);
+        m_fill.setFillColor(m_theme.sliderFillDisabled);
         m_knob.setFillColor(m_theme.sliderKnobDisabled);
         return;
     }
@@ -145,6 +144,9 @@ void Slider::updateKnob()
 
 void Slider::updateLabel()
 {
+    if (!m_valueLabel.has_value())
+        return;
+
     std::ostringstream oss;
 
     oss << std::fixed << std::setprecision(1) << m_value;
@@ -155,6 +157,6 @@ void Slider::updateLabel()
     sf::FloatRect lb = m_valueLabel->getLocalBounds();
 
     m_valueLabel->setOrigin({lb.position.x + lb.size.x / 2.f, 0.f});
-    m_valueLabel->setPosition({m_position.x + m_size.x / 2.f,
-                               m_position.y + m_size.y + 4.f});
+    m_valueLabel->setPosition({m_position.x + m_size.x / 2.f, m_position.y + m_size.y + 4.f});
 }
+
