@@ -1,0 +1,12 @@
+Fixes and updates:
+- Added Ui theme manager
+
+Bugs:
+- Slider height detemines its hitbox but does not cahnge thing visually
+- Inconsistent class APIs
+
+To Be added:
+- Icons as Seperate UI elements.
+- Panes, Scrollables, Tabs
+- Windows title bar change in ui manger
+
