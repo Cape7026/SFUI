@@ -42,7 +42,7 @@ int main()
 
     HWND hwnd = window.getNativeHandle();
 
-    COLORREF titleBarColor = RGB(30, 30, 30);
+    COLORREF titleBarColor = RGB(245, 245, 245);
 
     DwmSetWindowAttribute(
         hwnd,
@@ -102,7 +102,7 @@ int main()
     std::cout << "I\n";
     // sliderA.setValue(10.f);
     std::cout << "J\n";
-    sliderA.setPosition({50.f, 58.f});
+    sliderA.setPosition({50.f, 150.f});
     auto sldA = std::make_shared<Slider>(sliderA);
 
 
@@ -149,7 +149,7 @@ int main()
             ui.handleEvent(*event, window);
         }
 
-        window.clear(sf::Color(30, 30, 30));
+        window.clear(sf::Color(245, 245, 245));
         ui.draw(window);
         //window.draw(statusText);
         window.display();

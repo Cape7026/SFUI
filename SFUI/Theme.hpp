@@ -162,3 +162,26 @@ inline Theme darkTheme(
 
     1.f,
     16u);
+
+
+inline Theme lightTheme(
+    sf::Color(245, 245, 245), // window bg
+    sf::Color(75, 181, 236),  // accent color
+    sf::Color(235, 235, 235), // btn idle
+    sf::Color(225, 225, 225), // btn hover
+    sf::Color(215, 215, 215), // btn clicked
+    sf::Color(75, 181, 236),  // btn active
+    sf::Color(210, 210, 210), // btn border
+    sf::Color(195, 195, 195), // btn border click
+    sf::Color(225, 225, 225), // btn disabled
+    sf::Color(30, 30, 30),    // text normal
+    sf::Color(150, 150, 150), // text disabled
+    sf::Color(180, 180, 180), // slider track
+    sf::Color(75, 181, 236),  // slider fill
+    sf::Color(75, 181, 236),  // slider knob
+    sf::Color(245, 245, 245), // slider inner knob
+    sf::Color(190, 190, 190), // slider knob outline
+    sf::Color(225, 225, 225), // slider fill disabled
+    sf::Color(205, 205, 205), // slider knob disabled
+    1.f,
+    16u);

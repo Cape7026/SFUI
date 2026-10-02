@@ -69,7 +69,7 @@ protected:
     sf::String m_label;
     float m_charecterSize;
 
-    Theme m_theme = darkTheme;
+    Theme m_theme = lightTheme;
 
     ClickCallback m_onClick;
     ChangeCallbackFloat m_onChange;

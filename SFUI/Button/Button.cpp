@@ -42,7 +42,7 @@ void Button::handleVisual()
     m_shape.setSize(m_size);
     m_shape.setFillColor(m_theme.btnIdle);
     m_shape.setCornerPointCount(256);
-    m_shape.setOutlineColor(sf::Color(53, 53, 53));
+    m_shape.setOutlineColor(m_theme.btnBorder);
     m_shape.setOutlineThickness(1.f);
 
     if (!m_enabled)
