@@ -74,39 +74,28 @@ int main()
     iconFont.setSmooth(false);
 
     
-    UIManager ui;
+    UIManager ui(&window);
 
     /* sf::Text statusText(font, "Waiting...", 18u);
     statusText.setFillColor(sf::Color(200, 200, 200));
     statusText.setPosition({50.f, 420.f}); */
 
-    std::cout << "A\n";
+    
     Button buttonA;
-    std::cout << "B\n";
     buttonA.setSize({32.f, 32.f}); // 89 32
-    std::cout << "C\n";
     buttonA.setPosition({50.f, 48.f});
-    std::cout << "D\n";
     buttonA.setFont(iconFont);
-    std::cout << "E\n";
     buttonA.setLabel(sf::String(U"\uE713"));
-    std::cout << "F\n";
     auto btnA = std::make_shared<Button>(buttonA);
 
-    std::cout << "G\n";
-
-    // bug here
     Slider sliderA(0.f, 100.f, 10.f, font);
-    std::cout << "H\n";
     sliderA.setSize({200, 10});
-    std::cout << "I\n";
-    // sliderA.setValue(10.f);
-    std::cout << "J\n";
+    sliderA.setValue(10.f);
     sliderA.setPosition({50.f, 150.f});
     auto sldA = std::make_shared<Slider>(sliderA);
 
 
-    //btnA->setEnabled(false);
+    // btnA->setEnabled(false);
 
    /*  btnA->setOnClick([&]()
                      { statusText.setString("Btn A clicked"); }); */
@@ -120,7 +109,7 @@ int main()
 
     while (window.isOpen())
     {
-        ui.handelVisual();
+        ui.handleVisual();
         while (std::optional<sf::Event> event = window.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
@@ -149,8 +138,8 @@ int main()
             ui.handleEvent(*event, window);
         }
 
-        window.clear(sf::Color(245, 245, 245));
-        ui.draw(window);
+        ui.clearWindow(window);
+        ui.drawElements(window);
         //window.draw(statusText);
         window.display();
     }

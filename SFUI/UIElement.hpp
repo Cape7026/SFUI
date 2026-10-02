@@ -10,17 +10,17 @@
 #include <SFML/Graphics.hpp>
 
 #include "RoundedRectangleShape.hpp"
-#include "Theme.hpp"
+#include "UIThemeManager.hpp"
 
 
 #include <optional>
 
-class UIElement
+class UIElement : public UIThemeManager
 {
 public:
-    UIElement(): m_font(nullptr){};
+    UIElement() : m_font(nullptr) {};
 
-    //Theme darkTheme;
+    // Theme darkTheme;
 
     using ClickCallback = std::function<void()>;
     using ChangeCallbackFloat = std::function<void(float)>;
@@ -39,7 +39,6 @@ public:
     // virtual void setIcon(sf::String icon);
     virtual void setCharecterSize(float size);
     void setLabel(sf::String label = "");
-    void setTheme(Theme theme);
     void setOnClick(ClickCallback cb);
     void setOnChange(ChangeCallbackFloat cb);
 
@@ -68,8 +67,6 @@ protected:
     sf::Image m_icon;
     sf::String m_label;
     float m_charecterSize;
-
-    Theme m_theme = lightTheme;
 
     ClickCallback m_onClick;
     ChangeCallbackFloat m_onChange;

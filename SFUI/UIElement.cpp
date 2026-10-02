@@ -54,11 +54,6 @@ void UIElement::setLabel(sf::String label)
     m_label = label;
 }
 
-void UIElement::setTheme(Theme theme)
-{
-    m_theme = theme;
-}
-
 void UIElement::setOnClick(ClickCallback cb)
 {
     m_onClick = std::move(cb);
