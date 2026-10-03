@@ -1,8 +1,13 @@
-#include <SFML/Graphics.hpp>
+/* #include <SFML/Graphics.hpp>
 #include <Windows.h>
 #include <optional>
 #include <iostream>
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <limits>
 #include "RoundedRectangleShape.hpp"
+#include "windowsResizeFix.h"
 
 void letterboxView(sf::View &view, unsigned int windowWidth, unsigned int windowHeight)
 {
@@ -26,10 +31,50 @@ void letterboxView(sf::View &view, unsigned int windowWidth, unsigned int window
     view.setViewport(sf::FloatRect({posX, posY}, {sizeX, sizeY}));
 }
 
+sf::FloatRect getViewportForBounds(const sf::FloatRect &bounds, const sf::View &view)
+{
+    const sf::Vector2f viewSize = view.getSize();
+    const sf::Vector2f viewCenter = view.getCenter();
+    const sf::FloatRect viewViewport = view.getViewport();
+    const float angle = -view.getRotation().asRadians();
+    const float cosine = std::cos(angle);
+    const float sine = std::sin(angle);
+
+    const std::array<sf::Vector2f, 4> corners = {
+        bounds.position,
+        sf::Vector2f(bounds.position.x + bounds.size.x, bounds.position.y),
+        sf::Vector2f(bounds.position.x, bounds.position.y + bounds.size.y),
+        bounds.position + bounds.size};
+
+    float minX = std::numeric_limits<float>::max();
+    float minY = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::lowest();
+    float maxY = std::numeric_limits<float>::lowest();
+
+    for (const sf::Vector2f corner : corners)
+    {
+        const sf::Vector2f offset = corner - viewCenter;
+        const float viewX = cosine * offset.x - sine * offset.y;
+        const float viewY = sine * offset.x + cosine * offset.y;
+        const float normalizedX = 0.5f + viewX / viewSize.x;
+        const float normalizedY = 0.5f + viewY / viewSize.y;
+        const float windowX = viewViewport.position.x + normalizedX * viewViewport.size.x;
+        const float windowY = viewViewport.position.y + normalizedY * viewViewport.size.y;
+
+        minX = std::min(minX, windowX);
+        minY = std::min(minY, windowY);
+        maxX = std::max(maxX, windowX);
+        maxY = std::max(maxY, windowY);
+    }
+
+    return sf::FloatRect({minX, minY}, {maxX - minX, maxY - minY});
+}
+
 int main()
 {
     sf::ContextSettings settings{0, 0, 16};
     sf::RenderWindow window(sf::VideoMode({800, 600}), "SFUI", sf::State::Windowed, settings);
+    sfml::Win32ResizeFix resizeFix(window);
     window.setFramerateLimit(100);
 
     sf::View camera;
@@ -55,19 +100,25 @@ int main()
     other.setFillColor(sf::Color(200, 200, 200));
     other.setCornerPointCount(256);
 
+
+
+
+
+
+
     sf::RoundedRectangleShape parent;
-    parent.setSize({600.f, 500.f});
+    parent.setSize({10.f, 150.f});
     parent.setPosition({window.getSize().x / 2.f, window.getSize().y / 2.f});
     parent.setFillColor(sf::Color(60, 60, 60));
     parent.setOrigin({parent.getSize().x / 2.f, parent.getSize().y / 2.f});
     parent.setCornerPointCount(256);
 
     sf::CircleShape child;
-    child.setRadius(150.f);
+    child.setRadius(50.f);
     child.setPointCount(256);
     child.setFillColor(sf::Color::Red);
     child.setOrigin({child.getRadius(), child.getRadius()});
-    child.setPosition({0.f, 0.f});
+    child.setPosition({50.f, 0.f});
 
     sf::View parentView;
     parentView.setSize(parent.getSize());
@@ -142,25 +193,84 @@ int main()
         }
         camera.move(movement * baseSpeed * dt);
         camera.rotate(sf::degrees(rotationSpeed * dt));
-        window.clear(sf::Color::Black);
+        window.clear(sf::Color::White);
         window.setView(camera);
         window.draw(parent);
         sf::FloatRect bounds = parent.getGlobalBounds();
-        sf::Vector2i topLeft = window.mapCoordsToPixel(bounds.position, camera);
-        sf::Vector2i bottomRight = window.mapCoordsToPixel(bounds.position + bounds.size, camera);
         parentView.setSize(parent.getSize());
-        parentView.setCenter(parent.getPosition());
-        float viewportX = static_cast<float>(topLeft.x) / static_cast<float>(window.getSize().x);
-        float viewportY = static_cast<float>(topLeft.y) / static_cast<float>(window.getSize().y);
-        float viewportWidth = static_cast<float>(bottomRight.x - topLeft.x) / static_cast<float>(window.getSize().x);
-        float viewportHeight = static_cast<float>(bottomRight.y - topLeft.y) / static_cast<float>(window.getSize().y);
-        parentView.setViewport(sf::FloatRect({viewportX, viewportY}, {viewportWidth, viewportHeight}));
-        parentViewOutline.setPosition(parentView.getCenter());
+        parentView.setCenter(parent.getSize() / 2.f);
+        parentView.setViewport(getViewportForBounds(bounds, camera));
+        parentViewOutline.setPosition(parent.getPosition());
         window.setView(parentView);
         window.draw(child);
         window.setView(camera);
         window.draw(parentViewOutline);
         window.draw(other);
+        window.display();
+    }
+}
+
+
+ */
+
+
+
+ #include <SFML/Graphics.hpp>
+ #include "windowsResizeFix.h"
+
+#include <algorithm>
+#include <string>
+
+int main()
+{
+    sf::RenderWindow window(sf::VideoMode({640, 480}), "Resize me");
+    sfml::Win32ResizeFix resizeFix(window);
+    window.setVerticalSyncEnabled(true);
+
+    sf::RectangleShape square({100.f, 100.f});
+    square.setOrigin({50.f, 50.f});
+    square.setFillColor(sf::Color(200, 120, 40));
+
+    sf::RectangleShape outline;
+    outline.setFillColor(sf::Color::Transparent);
+    outline.setOutlineColor(sf::Color::Green);
+    outline.setOutlineThickness(-4.f);
+
+    const sf::Clock time;
+    sf::Clock       frameClock;
+    sf::Clock       titleClock;
+    sf::Time        worstGap;
+    int             frames = 0;
+
+    while (window.isOpen())
+    {
+        while (const std::optional event = window.pollEvent())
+        {
+            if (event->is<sf::Event::Closed>())
+                window.close();
+            else if (const auto* resized = event->getIf<sf::Event::Resized>())
+                window.setView(sf::View(sf::FloatRect({0.f, 0.f}, sf::Vector2f(resized->size))));
+        }
+
+        worstGap = std::max(worstGap, frameClock.restart());
+        ++frames;
+        if (titleClock.getElapsedTime() >= sf::seconds(1))
+        {
+            window.setTitle("Resize me - " + std::to_string(frames) + " FPS, worst frame gap " +
+                            std::to_string(worstGap.asMilliseconds()) + " ms");
+            frames   = 0;
+            worstGap = sf::Time::Zero;
+            titleClock.restart();
+        }
+
+        const sf::Vector2f size(window.getSize());
+        square.setPosition(size / 2.f);
+        square.setRotation(sf::degrees(time.getElapsedTime().asSeconds() * 90.f));
+        outline.setSize(size);
+
+        window.clear(sf::Color(30, 30, 60));
+        window.draw(outline);
+        window.draw(square);
         window.display();
     }
 }
