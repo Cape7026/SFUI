@@ -23,5 +23,27 @@
             ],
             "preLaunchTask": "SFUI"
         },
+        {
+            "name": "TEST",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/TEST.exe", //Change name
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "C:/Program Files/Cpp Compilers/Mingw64/bin/gdb.exe",
+            
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "TEST"
+        }
     ]
 }
