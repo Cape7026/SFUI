@@ -2,7 +2,6 @@ Fixes and updates:
 - Added Ui theme manager
 
 Bugs:
-- Slider height detemines its hitbox but does not cahnge thing visually
 - Inconsistent class APIs
 
 To Be added:

@@ -9,5 +9,5 @@ public:
     Theme getTheme();
 
     protected:
-    Theme m_theme = lightTheme;
+    Theme m_theme = darkTheme;
 };

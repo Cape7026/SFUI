@@ -58,7 +58,7 @@ int main()
 
     sf::Font iconFont("C:/Windows/Fonts/SegoeIcons.ttf");
 
-    std::cout << iconFont.hasGlyph(U'\uE700') << '\n';
+    // std::cout << iconFont.hasGlyph(U'\uE700') << '\n';
 
     if (!font.openFromFile("Aptos.ttf"))
     {
@@ -85,13 +85,13 @@ int main()
     buttonA.setSize({32.f, 32.f}); // 89 32
     buttonA.setPosition({50.f, 48.f});
     buttonA.setFont(iconFont);
-    buttonA.setLabel(sf::String(U"\uE713"));
+    buttonA.setLabel(sf::String(U"\uE709"));
     auto btnA = std::make_shared<Button>(buttonA);
 
     Slider sliderA(0.f, 100.f, 10.f, font);
-    sliderA.setSize({200, 10});
+    sliderA.setSize({600, 10});
     sliderA.setValue(10.f);
-    sliderA.setPosition({50.f, 150.f});
+    sliderA.setPosition({80.f,48.f});
     auto sldA = std::make_shared<Slider>(sliderA);
 
 
@@ -100,7 +100,7 @@ int main()
    /*  btnA->setOnClick([&]()
                      { statusText.setString("Btn A clicked"); }); */
 
-    ui.add(btnA);
+    // ui.add(btnA);
     ui.add(sldA);
 
     

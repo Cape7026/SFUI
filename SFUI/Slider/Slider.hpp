@@ -15,14 +15,16 @@ public:
     void draw(sf::RenderWindow &window) override;
 
 private:
-    static constexpr float kTrackH = 6.f;
-    static constexpr float kKnobR = 9.f;
+    static float kTrackH;
+    static float kKnobR;
+
+    /* static constexpr float kTrackH = 6.f;
+    static constexpr float kKnobR = 9.f; */
 
     float trackLeft() const;
     float trackRight() const;
     float trackMidY() const;
-
-    void buildShapes();
+    
     void applyDrag(float mouseX);
     void updateKnob();
     void updateLabel();
@@ -34,5 +36,6 @@ private:
     sf::RoundedRectangleShape m_fill;
     sf::CircleShape m_knob;
     sf::CircleShape m_innerKnob;
+    sf::RectangleShape m_sliderBounds;
     std::optional<sf::Text> m_valueLabel;
 };

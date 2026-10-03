@@ -27,38 +27,39 @@ float Slider::getValue() const
 
 void Slider::handleEvent(const sf::Event &event, const sf::RenderWindow &window)
 {
-    if (!m_enabled)
+    if (!m_enabled || !m_visible)
         return;
 
-    if (const auto *mb = event.getIf<sf::Event::MouseButtonPressed>())
+    if (const auto *mouseButton = event.getIf<sf::Event::MouseButtonPressed>())
     {
-        if (mb->button == sf::Mouse::Button::Left)
+        if (mouseButton->button == sf::Mouse::Button::Left)
         {
-            sf::Vector2f mp = window.mapPixelToCoords({mb->position.x, mb->position.y});
+            sf::Vector2f mousePosition = window.mapPixelToCoords({mouseButton->position.x, mouseButton->position.y});
 
-            if (containsPoint(mp))
+            if (m_sliderBounds.getGlobalBounds().contains(mousePosition) || m_knob.getGlobalBounds().contains(mousePosition))
             {
                 m_dragging = true;
-                applyDrag(mp.x);
+                applyDrag(mousePosition.x);
             }
         }
     }
 
-    if (const auto *mb = event.getIf<sf::Event::MouseButtonReleased>())
+    if (const auto *mouseButton = event.getIf<sf::Event::MouseButtonReleased>())
     {
-        if (mb->button == sf::Mouse::Button::Left)
+        if (mouseButton->button == sf::Mouse::Button::Left)
             m_dragging = false;
     }
 
-    if (const auto *mm = event.getIf<sf::Event::MouseMoved>())
+    if (const auto *mouseMoved = event.getIf<sf::Event::MouseMoved>())
     {
         if (m_dragging)
         {
-            sf::Vector2f mp = window.mapPixelToCoords({mm->position.x, mm->position.y});
-            applyDrag(mp.x);
+            sf::Vector2f mousePosition = window.mapPixelToCoords({mouseMoved->position.x, mouseMoved->position.y});
+            applyDrag(mousePosition.x);
         }
     }
 }
+
 
 void Slider::handleVisual()
 {
@@ -73,8 +74,8 @@ void Slider::handleVisual()
     {
         float midY = trackMidY();
 
-        m_track.setSize({m_size.x, kTrackH});
-        m_track.setPosition({trackLeft(), midY - kTrackH / 2.f});
+        m_track.setSize({m_size.x, m_size.y}); //kTrackH in place of m_size.y
+        m_track.setPosition({trackLeft(), midY - m_size.y / 2.f}); //kTrackH in place of m_size.y
         m_track.setFillColor(m_theme.sliderTrack);
         m_track.setCornerPointCount(256);
         m_track.setRadius(100);
@@ -82,15 +83,23 @@ void Slider::handleVisual()
         m_fill = m_track;
         m_fill.setFillColor(m_theme.sliderFill);
 
-        m_knob.setRadius(kKnobR);
+        m_knob.setRadius(m_size.y); //kKnobR // radius * 2 thats why its bigger 
         m_knob.setPointCount(256);
         m_knob.setFillColor(m_theme.sliderKnob);
-        m_knob.setOrigin({kKnobR, kKnobR});
+        m_knob.setOrigin({m_knob.getRadius(), m_knob.getRadius()});
+
+        m_sliderBounds.setSize({m_size.x, m_size.y * 2.5f});
+        m_sliderBounds.setPosition({trackLeft() + m_size.x / 2.f, midY - m_size.y / 2.f});
+        m_sliderBounds.setFillColor(sf::Color::Transparent);
+        m_sliderBounds.setOutlineColor(m_theme.btnBorder);
+        m_sliderBounds.setOutlineThickness(1.f);
+        m_sliderBounds.setOrigin({m_size.x / 2.f, m_size.y / 2.f});
 
         updateKnob();
         updateLabel();
     }
 }
+
 
 void Slider::draw(sf::RenderWindow &window)
 {
@@ -103,7 +112,11 @@ void Slider::draw(sf::RenderWindow &window)
         window.draw(m_track);
         window.draw(m_fill);
         window.draw(m_knob);
-        window.draw(*m_valueLabel);
+        // window.draw(m_sliderBounds);
+        if (m_valueLabel.has_value())
+        {
+            window.draw(*m_valueLabel);
+        }
     }
 }
 
@@ -122,24 +135,22 @@ float Slider::trackMidY() const
     return m_position.y + m_size.y / 2.f;
 }
 
-void Slider::buildShapes()
-{
-}
+
 
 void Slider::applyDrag(float mouseX)
 {
-    float t = (mouseX - trackLeft()) / (trackRight() - trackLeft());
+    float ratio = (mouseX - trackLeft()) / (trackRight() - trackLeft());
 
-    setValue(m_min + std::clamp(t, 0.f, 1.f) * (m_max - m_min));
+    setValue(m_min + std::clamp(ratio, 0.f, 1.f) * (m_max - m_min));
 }
 
 void Slider::updateKnob()
 {
-    float t = (m_value - m_min) / (m_max - m_min);
-    float kx = trackLeft() + t * (trackRight() - trackLeft());
+    float ratio = (m_value - m_min) / (m_max - m_min);
+    float knobX = trackLeft() + ratio * (trackRight() - trackLeft());
 
-    m_knob.setPosition({kx, trackMidY()});
-    m_fill.setSize({kx - trackLeft(), kTrackH});
+    m_knob.setPosition({knobX, trackMidY()});
+    m_fill.setSize({knobX - trackLeft(), m_size.y});  // kTrackH
 }
 
 void Slider::updateLabel()
