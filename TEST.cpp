@@ -213,10 +213,8 @@ int main()
 
  */
 
-
-
- #include <SFML/Graphics.hpp>
- #include "windowsResizeFix.h"
+#include <SFML/Graphics.hpp>
+#include "WindowMods.h"
 
 #include <algorithm>
 #include <string>
@@ -224,7 +222,8 @@ int main()
 int main()
 {
     sf::RenderWindow window(sf::VideoMode({640, 480}), "Resize me");
-    sfml::Win32ResizeFix resizeFix(window);
+    SFUI::WindowMod::ensureSingleInstance(window.getNativeHandle());;
+    SFUI::WindowMod::resizeRenderFix(window);
     window.setVerticalSyncEnabled(true);
 
     sf::RectangleShape square({100.f, 100.f});
@@ -237,10 +236,10 @@ int main()
     outline.setOutlineThickness(-4.f);
 
     const sf::Clock time;
-    sf::Clock       frameClock;
-    sf::Clock       titleClock;
-    sf::Time        worstGap;
-    int             frames = 0;
+    sf::Clock frameClock;
+    sf::Clock titleClock;
+    sf::Time worstGap;
+    int frames = 0;
 
     while (window.isOpen())
     {
@@ -248,7 +247,7 @@ int main()
         {
             if (event->is<sf::Event::Closed>())
                 window.close();
-            else if (const auto* resized = event->getIf<sf::Event::Resized>())
+            else if (const auto *resized = event->getIf<sf::Event::Resized>())
                 window.setView(sf::View(sf::FloatRect({0.f, 0.f}, sf::Vector2f(resized->size))));
         }
 
@@ -256,9 +255,8 @@ int main()
         ++frames;
         if (titleClock.getElapsedTime() >= sf::seconds(1))
         {
-            window.setTitle("Resize me - " + std::to_string(frames) + " FPS, worst frame gap " +
-                            std::to_string(worstGap.asMilliseconds()) + " ms");
-            frames   = 0;
+            // window.setTitle("Resize me - " + std::to_string(frames) + " FPS, worst frame gap " + std::to_string(worstGap.asMilliseconds()) + " ms");
+            frames = 0;
             worstGap = sf::Time::Zero;
             titleClock.restart();
         }

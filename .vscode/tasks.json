@@ -15,6 +15,7 @@
                 "SFUI/Button/Button.cpp",
                 "SFUI/Slider/Slider.cpp",
                 "SFUI/Label/Label.cpp",
+
                 
 
                 "-IC:/Program Files/Cpp Libraries/SFML-3.0.2/include",
@@ -59,6 +60,7 @@
                 "bin/TEST.exe",
 
                 "-ldwmapi",
+                "-mwindows",
                 "-lsfml-graphics",
                 "-lsfml-window",
                 "-lsfml-system",

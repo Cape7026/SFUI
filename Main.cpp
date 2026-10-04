@@ -4,9 +4,11 @@
 #include <vector>
 #include <sstream>
 #include <windows.h>
+#include "WindowMods.h"
 #include <dwmapi.h>
 
 #include "SFUI/SFUI.hpp"
+
 
 #pragma comment(lib, "dwmapi.lib")
 
@@ -37,6 +39,8 @@ int main()
     sf::ContextSettings settings{0, 0, 16};
 
     sf::RenderWindow window(sf::VideoMode({800, 600}), "SFUI", sf::State::Windowed, settings);
+    SFUI::WindowMod::ensureSingleInstance(window.getNativeHandle());;
+    SFUI::WindowMod::resizeRenderFix(window);
 
     window.setFramerateLimit(100);
 
