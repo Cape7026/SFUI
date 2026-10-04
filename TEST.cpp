@@ -226,10 +226,6 @@ int main()
     SFUI::WindowMod::createSingle(window, sf::VideoMode({640, 480}), "Resize me");
     SFUI::WindowMod::resizeRenderFix(window);
 
-
-    // SFUI::WindowMod::singleInstanceWindow(window);
-    SFUI::WindowMod::resizeRenderFix(window);
-
     window.setVerticalSyncEnabled(true);
 
     sf::RectangleShape square({100.f, 100.f});
