@@ -221,9 +221,15 @@ int main()
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode({640, 480}), "Resize me");
-    SFUI::WindowMod::ensureSingleInstance(window.getNativeHandle());;
+
+    sf::RenderWindow window;
+    SFUI::WindowMod::createSingle(window, sf::VideoMode({640, 480}), "Resize me");
     SFUI::WindowMod::resizeRenderFix(window);
+
+
+    // SFUI::WindowMod::singleInstanceWindow(window);
+    SFUI::WindowMod::resizeRenderFix(window);
+
     window.setVerticalSyncEnabled(true);
 
     sf::RectangleShape square({100.f, 100.f});
@@ -249,13 +255,18 @@ int main()
                 window.close();
             else if (const auto *resized = event->getIf<sf::Event::Resized>())
                 window.setView(sf::View(sf::FloatRect({0.f, 0.f}, sf::Vector2f(resized->size))));
+            if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>())
+            {
+                if (keyPressed->code == sf::Keyboard::Key::F11)
+                    SFUI::WindowMod::toggleFullscreen(window);
+            }
         }
 
         worstGap = std::max(worstGap, frameClock.restart());
         ++frames;
         if (titleClock.getElapsedTime() >= sf::seconds(1))
         {
-            // window.setTitle("Resize me - " + std::to_string(frames) + " FPS, worst frame gap " + std::to_string(worstGap.asMilliseconds()) + " ms");
+            window.setTitle("Resize me - " + std::to_string(frames) + " FPS, worst frame gap " + std::to_string(worstGap.asMilliseconds()) + " ms");
             frames = 0;
             worstGap = sf::Time::Zero;
             titleClock.restart();

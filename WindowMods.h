@@ -4,6 +4,8 @@
 #include <Windows.h>
 #include <algorithm>
 #include <string>
+#include <cstdint>
+#include <utility>
 
 namespace SFUI
 {
@@ -11,88 +13,129 @@ namespace SFUI
     class WindowMod
     {
     private:
-        static bool singleInstanceGuard()
+        struct Claim
+        {
+            volatile std::uint64_t *slot;
+            bool duplicate;
+        };
+
+        static int &nextId()
+        {
+            static int id = 0;
+            return id;
+        }
+
+        static Claim claimSlot()
         {
             wchar_t selfPath[MAX_PATH]{};
             GetModuleFileNameW(nullptr, selfPath, MAX_PATH);
 
-            std::wstring mutexName = L"Local\\SingleInstance_";
+            std::wstring name = L"Local\\SingleInstance_";
             for (const wchar_t *c = selfPath; *c; ++c)
-                mutexName += (*c == L'\\' || *c == L'/' || *c == L':') ? L'_' : *c;
+                name += (*c == L'\\' || *c == L'/' || *c == L':') ? L'_' : *c;
+            name += L"_" + std::to_wstring(nextId()++);
 
-            // Handle is intentionally never closed so the mutex lives as long as this process
-            HANDLE mutex = CreateMutexW(nullptr, TRUE, mutexName.c_str());
-            if (!mutex || GetLastError() != ERROR_ALREADY_EXISTS)
-                return true;
+            // Handle and view are never closed so the object lives as long as this process
+            HANDLE map = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE,
+                                            0, sizeof(std::uint64_t), name.c_str());
+            if (!map)
+                return {nullptr, false};
 
-            struct Search
-            {
-                const wchar_t *path;
-                DWORD pid;
-                HWND found;
-            } search{selfPath, GetCurrentProcessId(), nullptr};
+            const bool duplicate = GetLastError() == ERROR_ALREADY_EXISTS;
 
-            EnumWindows(
-                [](HWND window, LPARAM lParam) -> BOOL
-                {
-                    auto &s = *reinterpret_cast<Search *>(lParam);
+            void *view = MapViewOfFile(map, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(std::uint64_t));
+            if (!view)
+                return {nullptr, false};
 
-                    if (!IsWindowVisible(window) || GetWindow(window, GW_OWNER))
-                        return TRUE;
-
-                    DWORD pid = 0;
-                    GetWindowThreadProcessId(window, &pid);
-                    if (pid == s.pid)
-                        return TRUE;
-
-                    HANDLE p = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
-                    if (!p)
-                        return TRUE;
-
-                    wchar_t path[MAX_PATH]{};
-                    DWORD size = MAX_PATH;
-                    const bool same = QueryFullProcessImageNameW(p, 0, path, &size) &&
-                                      _wcsicmp(path, s.path) == 0;
-                    CloseHandle(p);
-
-                    if (same)
-                    {
-                        s.found = window;
-                        return FALSE;
-                    }
-                    return TRUE;
-                },
-                reinterpret_cast<LPARAM>(&search));
-
-            if (search.found)
-            {
-                HWND target = search.found;
-                if (IsIconic(target))
-                    ShowWindow(target, SW_RESTORE);
-
-                HWND fg = GetForegroundWindow();
-                DWORD fgThread = fg ? GetWindowThreadProcessId(fg, nullptr) : 0;
-                DWORD thisThread = GetCurrentThreadId();
-                bool attached = fgThread && fgThread != thisThread &&
-                                AttachThreadInput(thisThread, fgThread, TRUE);
-
-                BringWindowToTop(target);
-                SetForegroundWindow(target);
-
-                if (attached)
-                    AttachThreadInput(thisThread, fgThread, FALSE);
-            }
-
-            ExitProcess(0);
+            return {static_cast<volatile std::uint64_t *>(view), duplicate};
         }
 
-        // Runs at program startup, before main
-        inline static const bool singleInstanceGuardRan = singleInstanceGuard();
+        static void focusWindow(HWND target)
+        {
+            if (IsIconic(target))
+                ShowWindow(target, SW_RESTORE);
+
+            HWND fg = GetForegroundWindow();
+            DWORD fgThread = fg ? GetWindowThreadProcessId(fg, nullptr) : 0;
+            DWORD thisThread = GetCurrentThreadId();
+            bool attached = fgThread && fgThread != thisThread &&
+                            AttachThreadInput(thisThread, fgThread, TRUE);
+
+            BringWindowToTop(target);
+            SetForegroundWindow(target);
+
+            if (attached)
+                AttachThreadInput(thisThread, fgThread, FALSE);
+        }
+
+        static void focusExisting(volatile std::uint64_t *slot)
+        {
+            // First instance may still be starting up, wait for its handle
+            for (int i = 0; i < 200; ++i)
+            {
+                HWND candidate = reinterpret_cast<HWND>(static_cast<std::uintptr_t>(*slot));
+                if (candidate && IsWindow(candidate))
+                {
+                    focusWindow(candidate);
+                    return;
+                }
+                Sleep(10);
+            }
+        }
+
+        inline static WINDOWPLACEMENT prevPlacement = {sizeof(WINDOWPLACEMENT)};
+        inline static bool fullscreen = false;
 
     public:
-        static bool ensureSingleInstance(HWND)
+        template <typename... Args>
+        static bool createSingle(sf::RenderWindow &window, Args &&...args)
         {
+            const Claim claim = claimSlot();
+
+            if (claim.slot && claim.duplicate)
+            {
+                focusExisting(claim.slot);
+                return false;
+            }
+
+            window.create(std::forward<Args>(args)...);
+
+            if (claim.slot)
+                *claim.slot = reinterpret_cast<std::uintptr_t>(window.getNativeHandle());
+
             return true;
+        }
+
+        static void toggleFullscreen(sf::RenderWindow &window)
+        {
+            HWND hwnd = window.getNativeHandle();
+            LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
+
+            if (!fullscreen)
+            {
+                MONITORINFO mi = {sizeof(MONITORINFO)};
+                HMONITOR mon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+
+                if (GetWindowPlacement(hwnd, &prevPlacement) && GetMonitorInfoW(mon, &mi))
+                {
+                    SetWindowLongPtrW(hwnd, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW);
+                    SetWindowPos(hwnd, HWND_TOP,
+                                 mi.rcMonitor.left, mi.rcMonitor.top,
+                                 mi.rcMonitor.right - mi.rcMonitor.left,
+                                 mi.rcMonitor.bottom - mi.rcMonitor.top,
+                                 SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+                    fullscreen = true;
+                }
+            }
+            else
+            {
+                SetWindowLongPtrW(hwnd, GWL_STYLE, style | WS_OVERLAPPEDWINDOW);
+                SetWindowPlacement(hwnd, &prevPlacement);
+                SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                             SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+                                 SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+                fullscreen = false;
+            }
         }
 
         static bool resizeRenderFix(sf::RenderWindow &window)
