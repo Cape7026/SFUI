@@ -36,10 +36,12 @@ void letterboxView(sf::View &view, unsigned int windowWidth, unsigned int window
 
 int main()
 {
-    sf::ContextSettings settings{0, 0, 16};
+    
 
+    SFUI::WindowMod::ensureSingleInstance();
+    sf::ContextSettings settings{0, 0, 16};
     sf::RenderWindow window(sf::VideoMode({800, 600}), "SFUI", sf::State::Windowed, settings);
-    SFUI::WindowMod::ensureSingleInstance(window.getNativeHandle());;
+
     SFUI::WindowMod::resizeRenderFix(window);
 
     window.setFramerateLimit(100);
@@ -138,6 +140,11 @@ int main()
 
                 letterboxView(camera, window.getSize().x, window.getSize().y);
                 window.setView(camera);
+            }
+            if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>())
+            {
+                if (keyPressed->code == sf::Keyboard::Key::F11)
+                    SFUI::WindowMod::toggleFullscreen(window);
             }
             ui.handleEvent(*event, window);
         }

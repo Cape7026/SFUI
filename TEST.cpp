@@ -1,4 +1,4 @@
-/* #include <SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 #include <Windows.h>
 #include <optional>
 #include <iostream>
@@ -7,7 +7,7 @@
 #include <cmath>
 #include <limits>
 #include "RoundedRectangleShape.hpp"
-#include "windowsResizeFix.h"
+#include "WindowMods.h"
 
 void letterboxView(sf::View &view, unsigned int windowWidth, unsigned int windowHeight)
 {
@@ -72,9 +72,11 @@ sf::FloatRect getViewportForBounds(const sf::FloatRect &bounds, const sf::View &
 
 int main()
 {
+    SFUI::WindowMod::ensureSingleInstance();
     sf::ContextSettings settings{0, 0, 16};
     sf::RenderWindow window(sf::VideoMode({800, 600}), "SFUI", sf::State::Windowed, settings);
-    sfml::Win32ResizeFix resizeFix(window);
+    SFUI::WindowMod::resizeRenderFix(window);
+
     window.setFramerateLimit(100);
 
     sf::View camera;
@@ -94,32 +96,14 @@ int main()
     }
     font.setSmooth(false);
 
-    sf::RoundedRectangleShape other;
-    other.setSize({100.f, 100.f});
-    other.setPosition({window.getSize().x / 2.f, window.getSize().y / 2.f});
-    other.setFillColor(sf::Color(200, 200, 200));
-    other.setCornerPointCount(256);
-
-
-
-
-
-
-
     sf::RoundedRectangleShape parent;
-    parent.setSize({10.f, 150.f});
+    parent.setSize({700.f, 500.f});
     parent.setPosition({window.getSize().x / 2.f, window.getSize().y / 2.f});
     parent.setFillColor(sf::Color(60, 60, 60));
     parent.setOrigin({parent.getSize().x / 2.f, parent.getSize().y / 2.f});
     parent.setCornerPointCount(256);
 
-    sf::CircleShape child;
-    child.setRadius(50.f);
-    child.setPointCount(256);
-    child.setFillColor(sf::Color::Red);
-    child.setOrigin({child.getRadius(), child.getRadius()});
-    child.setPosition({50.f, 0.f});
-
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     sf::View parentView;
     parentView.setSize(parent.getSize());
     parentView.setCenter(parent.getPosition());
@@ -129,7 +113,21 @@ int main()
     parentViewOutline.setOrigin({parentView.getSize().x / 2.f, parentView.getSize().y / 2.f});
     parentViewOutline.setFillColor(sf::Color::Transparent);
     parentViewOutline.setOutlineColor(sf::Color::Green);
-    parentViewOutline.setOutlineThickness(3.f);
+    parentViewOutline.setOutlineThickness(1.f);
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    sf::CircleShape child;
+    child.setRadius(50.f);
+    child.setPointCount(256);
+    child.setFillColor(sf::Color::Red);
+    child.setOrigin({child.getRadius(), child.getRadius()});
+    child.setPosition({0.f, 0.f});
+
+    sf::RoundedRectangleShape other;
+    other.setSize({100.f, 100.f});
+    other.setPosition({window.getSize().x / 2.f, window.getSize().y / 2.f});
+    other.setFillColor(sf::Color(200, 200, 200));
+    other.setCornerPointCount(256);
 
     sf::Clock clock;
 
@@ -162,6 +160,11 @@ int main()
                 camera.setCenter({window.getSize().x / 2.f, window.getSize().y / 2.f});
                 letterboxView(camera, window.getSize().x, window.getSize().y);
                 window.setView(camera);
+            }
+            if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>())
+            {
+                if (keyPressed->code == sf::Keyboard::Key::F11)
+                    SFUI::WindowMod::toggleFullscreen(window);
             }
         }
 
@@ -201,81 +204,16 @@ int main()
         parentView.setCenter(parent.getSize() / 2.f);
         parentView.setViewport(getViewportForBounds(bounds, camera));
         parentViewOutline.setPosition(parent.getPosition());
+
         window.setView(parentView);
-        window.draw(child);
+
+        window.draw(other);
+
         window.setView(camera);
         window.draw(parentViewOutline);
-        window.draw(other);
-        window.display();
-    }
-}
 
+        window.draw(child);
 
- */
-
-#include <SFML/Graphics.hpp>
-#include "WindowMods.h"
-
-#include <algorithm>
-#include <string>
-
-int main()
-{
-
-    sf::RenderWindow window;
-    SFUI::WindowMod::createSingle(window, sf::VideoMode({640, 480}), "Resize me");
-    SFUI::WindowMod::resizeRenderFix(window);
-
-    window.setVerticalSyncEnabled(true);
-
-    sf::RectangleShape square({100.f, 100.f});
-    square.setOrigin({50.f, 50.f});
-    square.setFillColor(sf::Color(200, 120, 40));
-
-    sf::RectangleShape outline;
-    outline.setFillColor(sf::Color::Transparent);
-    outline.setOutlineColor(sf::Color::Green);
-    outline.setOutlineThickness(-4.f);
-
-    const sf::Clock time;
-    sf::Clock frameClock;
-    sf::Clock titleClock;
-    sf::Time worstGap;
-    int frames = 0;
-
-    while (window.isOpen())
-    {
-        while (const std::optional event = window.pollEvent())
-        {
-            if (event->is<sf::Event::Closed>())
-                window.close();
-            else if (const auto *resized = event->getIf<sf::Event::Resized>())
-                window.setView(sf::View(sf::FloatRect({0.f, 0.f}, sf::Vector2f(resized->size))));
-            if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>())
-            {
-                if (keyPressed->code == sf::Keyboard::Key::F11)
-                    SFUI::WindowMod::toggleFullscreen(window);
-            }
-        }
-
-        worstGap = std::max(worstGap, frameClock.restart());
-        ++frames;
-        if (titleClock.getElapsedTime() >= sf::seconds(1))
-        {
-            window.setTitle("Resize me - " + std::to_string(frames) + " FPS, worst frame gap " + std::to_string(worstGap.asMilliseconds()) + " ms");
-            frames = 0;
-            worstGap = sf::Time::Zero;
-            titleClock.restart();
-        }
-
-        const sf::Vector2f size(window.getSize());
-        square.setPosition(size / 2.f);
-        square.setRotation(sf::degrees(time.getElapsedTime().asSeconds() * 90.f));
-        outline.setSize(size);
-
-        window.clear(sf::Color(30, 30, 60));
-        window.draw(outline);
-        window.draw(square);
         window.display();
     }
 }

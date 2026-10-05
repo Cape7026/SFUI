@@ -3,8 +3,8 @@
 #include <SFML/Graphics.hpp>
 #include <Windows.h>
 #include <algorithm>
-#include <string>
 #include <cstdint>
+#include <string>
 #include <utility>
 
 namespace SFUI
@@ -13,43 +13,6 @@ namespace SFUI
     class WindowMod
     {
     private:
-        struct Claim
-        {
-            volatile std::uint64_t *slot;
-            bool duplicate;
-        };
-
-        static int &nextId()
-        {
-            static int id = 0;
-            return id;
-        }
-
-        static Claim claimSlot()
-        {
-            wchar_t selfPath[MAX_PATH]{};
-            GetModuleFileNameW(nullptr, selfPath, MAX_PATH);
-
-            std::wstring name = L"Local\\SingleInstance_";
-            for (const wchar_t *c = selfPath; *c; ++c)
-                name += (*c == L'\\' || *c == L'/' || *c == L':') ? L'_' : *c;
-            name += L"_" + std::to_wstring(nextId()++);
-
-            // Handle and view are never closed so the object lives as long as this process
-            HANDLE map = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE,
-                                            0, sizeof(std::uint64_t), name.c_str());
-            if (!map)
-                return {nullptr, false};
-
-            const bool duplicate = GetLastError() == ERROR_ALREADY_EXISTS;
-
-            void *view = MapViewOfFile(map, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(std::uint64_t));
-            if (!view)
-                return {nullptr, false};
-
-            return {static_cast<volatile std::uint64_t *>(view), duplicate};
-        }
-
         static void focusWindow(HWND target)
         {
             if (IsIconic(target))
@@ -68,82 +31,242 @@ namespace SFUI
                 AttachThreadInput(thisThread, fgThread, FALSE);
         }
 
-        static void focusExisting(volatile std::uint64_t *slot)
+        static HWND findWindowOfProcess(DWORD pid)
         {
-            // First instance may still be starting up, wait for its handle
-            for (int i = 0; i < 200; ++i)
+            struct Search
             {
-                HWND candidate = reinterpret_cast<HWND>(static_cast<std::uintptr_t>(*slot));
-                if (candidate && IsWindow(candidate))
+                DWORD pid;
+                HWND found;
+            } search{pid, nullptr};
+
+            EnumWindows(
+                [](HWND window, LPARAM lParam) -> BOOL
                 {
-                    focusWindow(candidate);
-                    return;
-                }
-                Sleep(10);
-            }
+                    auto &s = *reinterpret_cast<Search *>(lParam);
+
+                    if (!IsWindowVisible(window) || GetWindow(window, GW_OWNER))
+                        return TRUE;
+
+                    DWORD windowPid = 0;
+                    GetWindowThreadProcessId(window, &windowPid);
+                    if (windowPid != s.pid)
+                        return TRUE;
+
+                    s.found = window;
+                    return FALSE;
+                },
+                reinterpret_cast<LPARAM>(&search));
+
+            return search.found;
+        }
+
+        static void leaveFullscreen(HWND hwnd)
+        {
+            if (!fullscreen)
+                return;
+
+            internalChange = true;
+
+            LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
+            SetWindowLongPtrW(hwnd, GWL_STYLE, style | WS_OVERLAPPEDWINDOW);
+            SetWindowPlacement(hwnd, &prevPlacement);
+            SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+                             SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+
+            internalChange = false;
+            fullscreen = false;
         }
 
         inline static WINDOWPLACEMENT prevPlacement = {sizeof(WINDOWPLACEMENT)};
         inline static bool fullscreen = false;
+        inline static bool internalChange = false;
+        inline static bool lastKeyWasRepeat = false;
 
     public:
-        template <typename... Args>
-        static bool createSingle(sf::RenderWindow &window, Args &&...args)
+        static void ensureSingleInstance()
         {
-            const Claim claim = claimSlot();
+            wchar_t selfPath[MAX_PATH]{};
+            GetModuleFileNameW(nullptr, selfPath, MAX_PATH);
 
-            if (claim.slot && claim.duplicate)
+            std::wstring name = L"Local\\SingleInstance_";
+            for (const wchar_t *c = selfPath; *c; ++c)
+                name += (*c == L'\\' || *c == L'/' || *c == L':') ? L'_' : *c;
+
+            // Handle and view are never closed so the object lives as long as this process
+            HANDLE map = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE,
+                                            0, sizeof(std::uint64_t), name.c_str());
+            if (!map)
+                return;
+
+            const bool alreadyRunning = GetLastError() == ERROR_ALREADY_EXISTS;
+
+            void *view = MapViewOfFile(map, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(std::uint64_t));
+            if (!view)
+                return;
+
+            volatile std::uint64_t *slot = static_cast<volatile std::uint64_t *>(view);
+
+            if (!alreadyRunning)
             {
-                focusExisting(claim.slot);
-                return false;
+                *slot = GetCurrentProcessId();
+                return;
             }
 
-            window.create(std::forward<Args>(args)...);
+            // First instance may still be starting up, so retry for a bit
+            HWND target = nullptr;
+            for (int i = 0; i < 200 && !target; ++i)
+            {
+                const DWORD pid = static_cast<DWORD>(*slot);
+                if (pid)
+                    target = findWindowOfProcess(pid);
 
-            if (claim.slot)
-                *claim.slot = reinterpret_cast<std::uintptr_t>(window.getNativeHandle());
+                if (!target)
+                    Sleep(10);
+            }
 
-            return true;
+            if (target)
+                focusWindow(target);
+
+            ExitProcess(0);
         }
 
         static void toggleFullscreen(sf::RenderWindow &window)
         {
+            // Subclass is needed to read the key repeat flag
+            install(window);
+
+            if (lastKeyWasRepeat)
+                return;
+
             HWND hwnd = window.getNativeHandle();
-            LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
 
-            if (!fullscreen)
+            if (fullscreen)
             {
-                MONITORINFO mi = {sizeof(MONITORINFO)};
-                HMONITOR mon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-
-                if (GetWindowPlacement(hwnd, &prevPlacement) && GetMonitorInfoW(mon, &mi))
-                {
-                    SetWindowLongPtrW(hwnd, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW);
-                    SetWindowPos(hwnd, HWND_TOP,
-                                 mi.rcMonitor.left, mi.rcMonitor.top,
-                                 mi.rcMonitor.right - mi.rcMonitor.left,
-                                 mi.rcMonitor.bottom - mi.rcMonitor.top,
-                                 SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
-                    fullscreen = true;
-                }
+                leaveFullscreen(hwnd);
+                return;
             }
-            else
+
+            MONITORINFO mi = {sizeof(MONITORINFO)};
+            HMONITOR mon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+
+            if (GetWindowPlacement(hwnd, &prevPlacement) && GetMonitorInfoW(mon, &mi))
             {
-                SetWindowLongPtrW(hwnd, GWL_STYLE, style | WS_OVERLAPPEDWINDOW);
-                SetWindowPlacement(hwnd, &prevPlacement);
-                SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
-                             SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
-                                 SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
-                fullscreen = false;
+                LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
+
+                internalChange = true;
+
+                SetWindowLongPtrW(hwnd, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW);
+                SetWindowPos(hwnd, HWND_TOP,
+                             mi.rcMonitor.left, mi.rcMonitor.top,
+                             mi.rcMonitor.right - mi.rcMonitor.left,
+                             mi.rcMonitor.bottom - mi.rcMonitor.top,
+                             SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+
+                internalChange = false;
+                fullscreen = true;
             }
         }
 
         static bool resizeRenderFix(sf::RenderWindow &window)
         {
+            if (!install(window))
+                return false;
+
+            getState().resizeEnabled = true;
+            return true;
+        }
+
+    private:
+        struct State
+        {
+            HWND hwnd = nullptr;
+            WNDPROC originalWndProc = nullptr;
+            HHOOK messageHook = nullptr;
+
+            bool installed = false;
+            bool resizeEnabled = false;
+            bool resizing = false;
+
+            WPARAM hit = 0;
+
+            POINT capturePoint{};
+            RECT resizeRect{};
+            RECT originalRect{};
+
+            LONG minWidth = 1;
+            LONG minHeight = 1;
+            LONG maxWidth = 50000;
+            LONG maxHeight = 50000;
+
+            ~State()
+            {
+                if (installed)
+                {
+                    finishResize(false);
+
+                    if (messageHook)
+                        UnhookWindowsHookEx(messageHook);
+
+                    if (hwnd && IsWindow(hwnd))
+                    {
+                        SetWindowLongPtrW(
+                            hwnd,
+                            GWLP_WNDPROC,
+                            reinterpret_cast<LONG_PTR>(
+                                originalWndProc));
+
+                        RemovePropW(
+                            hwnd,
+                            propertyName());
+                    }
+                }
+            }
+
+            void finishResize(bool restore)
+            {
+                if (!resizing)
+                    return;
+
+                if (restore)
+                {
+                    SetWindowPos(
+                        hwnd,
+                        nullptr,
+                        originalRect.left,
+                        originalRect.top,
+                        originalRect.right - originalRect.left,
+                        originalRect.bottom - originalRect.top,
+                        SWP_NOZORDER |
+                            SWP_NOACTIVATE |
+                            SWP_NOOWNERZORDER);
+                }
+
+                if (GetCapture() == hwnd)
+                    ReleaseCapture();
+
+                resizing = false;
+                hit = 0;
+            }
+        };
+
+        static State &getState()
+        {
+            static State state;
+            return state;
+        }
+
+        static constexpr LPCWSTR propertyName()
+        {
+            return L"SFUI_WindowMod";
+        }
+
+        static bool install(sf::RenderWindow &window)
+        {
             State &state = getState();
 
             if (state.installed)
-                return false;
+                return true;
 
             state.hwnd = window.getNativeHandle();
 
@@ -201,97 +324,6 @@ namespace SFUI
 
             state.installed = true;
             return true;
-        }
-
-    private:
-        struct State
-        {
-            HWND hwnd = nullptr;
-            WNDPROC originalWndProc = nullptr;
-            HHOOK messageHook = nullptr;
-
-            HANDLE mutex = nullptr;
-
-            bool installed = false;
-            bool resizing = false;
-
-            WPARAM hit = 0;
-
-            POINT capturePoint{};
-            RECT resizeRect{};
-            RECT originalRect{};
-
-            LONG minWidth = 1;
-            LONG minHeight = 1;
-            LONG maxWidth = 50000;
-            LONG maxHeight = 50000;
-
-            ~State()
-            {
-                if (installed)
-                {
-                    finishResize(false);
-
-                    if (messageHook)
-                        UnhookWindowsHookEx(messageHook);
-
-                    if (hwnd && IsWindow(hwnd))
-                    {
-                        SetWindowLongPtrW(
-                            hwnd,
-                            GWLP_WNDPROC,
-                            reinterpret_cast<LONG_PTR>(
-                                originalWndProc));
-
-                        RemovePropW(
-                            hwnd,
-                            propertyName());
-                    }
-                }
-
-                if (mutex)
-                {
-                    ReleaseMutex(mutex);
-                    CloseHandle(mutex);
-                }
-            }
-
-            void finishResize(bool restore)
-            {
-                if (!resizing)
-                    return;
-
-                if (restore)
-                {
-                    SetWindowPos(
-                        hwnd,
-                        nullptr,
-                        originalRect.left,
-                        originalRect.top,
-                        originalRect.right - originalRect.left,
-                        originalRect.bottom - originalRect.top,
-                        SWP_NOZORDER |
-                            SWP_NOACTIVATE |
-                            SWP_NOOWNERZORDER);
-                }
-
-                if (GetCapture() == hwnd)
-                    ReleaseCapture();
-
-                resizing = false;
-                hit = 0;
-            }
-        };
-
-        static State &getState()
-        {
-            static State state;
-            return state;
-        }
-
-        static constexpr LPCWSTR propertyName()
-        {
-            return L"SFUI_WindowMod";
         }
 
         static bool isResizeHit(WPARAM hit)
@@ -651,7 +683,7 @@ namespace SFUI
             {
             case WM_NCLBUTTONDOWN:
             {
-                if (isResizeHit(wParam))
+                if (state.resizeEnabled && isResizeHit(wParam))
                 {
                     POINT point{
                         static_cast<SHORT>(LOWORD(lParam)),
@@ -674,7 +706,16 @@ namespace SFUI
 
             case WM_SYSCOMMAND:
             {
-                if ((wParam & 0xFFF0) == SC_SIZE)
+                const WPARAM command = wParam & 0xFFF0;
+
+                // Fullscreen ignores minimize/restore/maximize (Win+Down etc.)
+                if (fullscreen && !IsIconic(state.hwnd) &&
+                    (command == SC_MINIMIZE ||
+                     command == SC_RESTORE ||
+                     command == SC_MAXIMIZE))
+                    return 0;
+
+                if (state.resizeEnabled && command == SC_SIZE)
                 {
                     WPARAM hit =
                         systemCommandToHit(wParam);
@@ -682,6 +723,21 @@ namespace SFUI
                     if (isResizeHit(hit) &&
                         beginResize(state, hit))
                         return 0;
+                }
+
+                break;
+            }
+
+            case WM_WINDOWPOSCHANGING:
+            {
+                // Catches size/move changes that skip WM_SYSCOMMAND
+                if (fullscreen && !internalChange && !IsIconic(state.hwnd))
+                {
+                    auto *pos = reinterpret_cast<WINDOWPOS *>(lParam);
+
+                    // -32000 is where Windows parks a minimizing window, let that through
+                    if (pos->x != -32000 || pos->y != -32000)
+                        pos->flags |= SWP_NOMOVE | SWP_NOSIZE;
                 }
 
                 break;
@@ -721,6 +777,9 @@ namespace SFUI
 
             case WM_KEYDOWN:
             {
+                // Bit 30 is set when the key was already down (auto repeat)
+                lastKeyWasRepeat = (lParam & (1 << 30)) != 0;
+
                 if (state.resizing &&
                     wParam == VK_ESCAPE)
                 {
@@ -728,6 +787,19 @@ namespace SFUI
                     return 0;
                 }
 
+                break;
+            }
+
+            case WM_SYSKEYDOWN:
+            {
+                lastKeyWasRepeat = (lParam & (1 << 30)) != 0;
+                break;
+            }
+
+            case WM_KEYUP:
+            case WM_SYSKEYUP:
+            {
+                lastKeyWasRepeat = false;
                 break;
             }
 
@@ -796,9 +868,11 @@ namespace SFUI
                                 propertyName()));
 
                     if (state)
+                    {
                         handleResizeMessage(
                             *state,
                             message);
+                    }
                 }
             }
 
